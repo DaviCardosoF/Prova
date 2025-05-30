@@ -1,0 +1,71 @@
+services:
+
+  # API Node.js - Products
+  products:
+    build: ./products
+    container_name: api-products
+    ports:
+      - "3001:3001"
+    depends_on:
+      - db
+      - redis
+    networks:
+      - app-network
+
+  # API Python - Orders
+  orders:
+    build: ./orders
+    container_name: api-orders
+    ports:
+      - "3002:5000"
+    depends_on:
+      - db
+      - redis
+    networks:
+      - app-network
+
+  # API PHP - Payments (direto via PHP built-in server)
+  payments:
+    build: ./payments
+    container_name: api-payments
+    ports:
+      - "3003:3003"
+    volumes:
+      - ./payments:/var/www/html
+    depends_on:
+      - db
+      - redis
+    networks:
+      - app-network
+    command: php -S 0.0.0.0:3003 -t /var/www/html
+
+  # Banco de dados MySQL
+  db:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: ecommerce
+      MYSQL_ROOT_PASSWORD: example
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - app-network
+
+  # Redis
+  redis:
+    image: redis:7.2
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - app-network
+
+volumes:
+  mysql_data:
+
+networks:
+  app-network:
+    driver: bridge
